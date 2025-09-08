@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import React, { useState, useMemo } from 'react';
 import { Calendar, Trash2, Info, CalendarDays, CheckCircle, X, Plus, Settings } from 'lucide-react';
 
 const VacationPlanner2026 = () => {
@@ -43,6 +43,9 @@ const VacationPlanner2026 = () => {
   const [hoveredDate, setHoveredDate] = useState<string | null>(null);
   const [totalVacationDaysAvailable, setTotalVacationDaysAvailable] = useState(28);
   const [editingDays, setEditingDays] = useState(false);
+  const [modalPosition, setModalPosition] = useState({ x: 0, y: 0 });
+  const [isDragging, setIsDragging] = useState(false);
+  const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
 
   const monthNames = [
     'Январь', 'Февраль', 'Март', 'Апрель', 'Май', 'Июнь',
@@ -173,6 +176,43 @@ const VacationPlanner2026 = () => {
     setHoveredDate(null);
   };
 
+  // Обработчики для перетаскивания модалки
+  const handleMouseDown = (e: React.MouseEvent) => {
+    if (e.target === e.currentTarget) {
+      setIsDragging(true);
+      const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
+      setDragOffset({
+        x: e.clientX - rect.left,
+        y: e.clientY - rect.top
+      });
+    }
+  };
+
+  const handleMouseMove = (e: MouseEvent) => {
+    if (isDragging) {
+      setModalPosition({
+        x: e.clientX - dragOffset.x,
+        y: e.clientY - dragOffset.y
+      });
+    }
+  };
+
+  const handleMouseUp = () => {
+    setIsDragging(false);
+  };
+
+  // Добавляем глобальные обработчики событий мыши
+  React.useEffect(() => {
+    if (isDragging) {
+      document.addEventListener('mousemove', handleMouseMove);
+      document.addEventListener('mouseup', handleMouseUp);
+      return () => {
+        document.removeEventListener('mousemove', handleMouseMove);
+        document.removeEventListener('mouseup', handleMouseUp);
+      };
+    }
+  }, [isDragging, dragOffset]);
+
   const removePeriod = (id: number) => {
     setVacationPeriods(vacationPeriods.filter(p => p.id !== id));
   };
@@ -262,11 +302,11 @@ const VacationPlanner2026 = () => {
           onMouseEnter={() => handleDateHover(date)}
           className={`
             h-6 text-xs font-medium transition-all relative rounded cursor-pointer
-            ${isHoliday ? 'bg-red-100 text-red-600 font-bold' : 
+            ${inSelection ? 'bg-blue-200 text-blue-900' : 
+              isHoliday ? 'bg-red-100 text-red-600 font-bold' : 
               weekend ? 'bg-gray-100 text-gray-400' : 
               'hover:bg-blue-50 text-gray-700'}
             ${periodInfo && !inSelection ? `text-white` : ''}
-            ${inSelection ? 'bg-blue-200 text-blue-900' : ''}
             ${isStartOrEnd ? 'ring-2 ring-blue-500' : ''}
             ${isShort ? 'underline decoration-orange-400' : ''}
           `}
@@ -304,10 +344,27 @@ const VacationPlanner2026 = () => {
 
       {/* Попап с информацией о выборе */}
       {currentSelectionInfo && (
-        <div className="fixed top-24 left-1/2 transform -translate-x-1/2 z-50 bg-white rounded-xl shadow-2xl p-6 border-2 border-blue-500">
+        <div 
+          className={`fixed z-50 bg-white rounded-xl shadow-2xl p-6 border-2 border-blue-500 cursor-move select-none ${
+            isDragging ? 'cursor-grabbing' : 'cursor-grab'
+          }`}
+          style={{
+            left: modalPosition.x || '50%',
+            top: modalPosition.y || '6rem',
+            transform: modalPosition.x ? 'none' : 'translateX(-50%)'
+          }}
+          onMouseDown={handleMouseDown}
+        >
           <div className="flex items-start justify-between gap-6">
-            <div>
-              <h3 className="text-lg font-semibold mb-2">Выбран период</h3>
+            <div className="flex-1">
+              <div className="flex items-center gap-2 mb-2">
+                <h3 className="text-lg font-semibold">Выбран период</h3>
+                <div className="text-xs text-gray-400 flex items-center gap-1" title="Перетащите модалку">
+                  <div className="w-1 h-1 bg-gray-400 rounded-full"></div>
+                  <div className="w-1 h-1 bg-gray-400 rounded-full"></div>
+                  <div className="w-1 h-1 bg-gray-400 rounded-full"></div>
+                </div>
+              </div>
               <p className="text-sm text-gray-600 mb-1">
                 <strong>Даты:</strong> {formatDateShort(new Date(currentSelectionInfo.start))} — {formatDateShort(new Date(currentSelectionInfo.end))}
               </p>

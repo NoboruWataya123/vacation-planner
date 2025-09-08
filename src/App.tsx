@@ -97,7 +97,7 @@ const VacationPlanner2026 = () => {
     const end = new Date(endDate);
     
     while (current <= end) {
-      const dateStr = current.toISOString().split('T')[0];
+      const dateStr = `${current.getFullYear()}-${(current.getMonth() + 1).toString().padStart(2, '0')}-${current.getDate().toString().padStart(2, '0')}`;
       if (!holidays[dateStr]) {
         count++;
       }
@@ -114,7 +114,7 @@ const VacationPlanner2026 = () => {
     const end = new Date(endDate);
     
     while (current <= end) {
-      const dateStr = current.toISOString().split('T')[0];
+      const dateStr = `${current.getFullYear()}-${(current.getMonth() + 1).toString().padStart(2, '0')}-${current.getDate().toString().padStart(2, '0')}`;
       if (!isWeekend(current) && !holidays[dateStr]) {
         count++;
       }
@@ -133,7 +133,7 @@ const VacationPlanner2026 = () => {
   };
 
   const handleDateClick = (date: Date) => {
-    const dateStr = date.toISOString().split('T')[0];
+    const dateStr = `${date.getFullYear()}-${(date.getMonth() + 1).toString().padStart(2, '0')}-${date.getDate().toString().padStart(2, '0')}`;
     
     if (!selectionStart || (selectionStart && selectionEnd)) {
       // Начинаем новый выбор
@@ -152,7 +152,8 @@ const VacationPlanner2026 = () => {
 
   const handleDateHover = (date: Date) => {
     if (selectionStart && !selectionEnd) {
-      setHoveredDate(date.toISOString().split('T')[0]);
+      const dateStr = `${date.getFullYear()}-${(date.getMonth() + 1).toString().padStart(2, '0')}-${date.getDate().toString().padStart(2, '0')}`;
+      setHoveredDate(dateStr);
     }
   };
 
@@ -296,7 +297,7 @@ const VacationPlanner2026 = () => {
     // Дни месяца
     for (let day = 1; day <= daysInMonth; day++) {
       const date = new Date(2026, month, day);
-      const dateStr = date.toISOString().split('T')[0];
+      const dateStr = `${date.getFullYear()}-${(date.getMonth() + 1).toString().padStart(2, '0')}-${date.getDate().toString().padStart(2, '0')}`;
       const isHoliday = holidays[dateStr];
       const isShort = shortDays.includes(dateStr);
       const weekend = isWeekend(date);
